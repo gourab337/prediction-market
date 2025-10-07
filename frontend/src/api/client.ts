@@ -20,7 +20,7 @@ import type {
   MarketsResponse,
 } from '@/types/api';
 
-const API_BASE_URL = 'https://prediction-market-44satynwz-gourab337s-projects.vercel.app/';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // Create axios instance with default config
 const api = axios.create({
