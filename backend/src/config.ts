@@ -5,7 +5,8 @@ dotenv.config();
 
 // Server Configuration
 export const SERVER_CONFIG = {
-  port: process.env.PORT || 3000
+  port: process.env.PORT || 3000,
+  backendUrl: process.env.BACKEND_URL || 'http://localhost:3001'
 };
 
 // Helper function to ensure addresses are checksummed

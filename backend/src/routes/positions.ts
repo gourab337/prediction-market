@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { ethers } from 'ethers';
-import { provider, wallet } from '../config';
+import { provider, wallet, SERVER_CONFIG } from '../config';
 import { MARKET_ABI, AMM_POOL_ABI, ERC20_ABI } from '../abis';
 import { validateMarketAddressParam, HttpError } from '../middleware';
 
@@ -140,7 +140,7 @@ router.get('/my-portfolio', async (req, res, next) => {
     // Get all markets and aggregate positions across them
     try {
       // Get all markets by calling the markets endpoint directly
-      const response = await fetch('http://localhost:3001/api/markets');
+      const response = await fetch(`${SERVER_CONFIG.backendUrl}/api/markets`);
       const marketsData: any = await response.json();
       const allMarkets = marketsData.markets;
       
