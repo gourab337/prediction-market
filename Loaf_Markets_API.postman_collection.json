@@ -1,0 +1,663 @@
+{
+	"info": {
+		"_postman_id": "12345678-1234-5678-9abc-123456789abc",
+		"name": "Loaf Markets API - Updated Collection",
+		"description": "Complete API collection for Loaf Markets prediction platform.\n\n## Key Features:\n- **Prediction Markets**: Create and trade on binary outcome markets\n- **AMM Pools**: Separate YES/NO pools with automated market making\n- **Position Tracking**: Real-time portfolio and position management\n- **Liquidity Provision**: Earn fees by providing liquidity to outcome pools\n\n## Important Notes:\n- Price calculations use manual computation due to AMM contract bug\n- Transaction delays (5-12s) prevent nonce conflicts\n- USDC uses 6 decimals, shares use 18 decimals\n\n## Usage:\n1. Import this collection and environment\n2. Ensure sufficient USDC (use setup/mint endpoint)\n3. Follow workflows in order for complete testing",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3001",
+			"type": "string"
+		},
+		{
+			"key": "marketAddress",
+			"value": "0x62003B9CA0C4bb79FdD1CfD951CF5e15D8830641",
+			"type": "string",
+			"description": "Current demo market address"
+		},
+		{
+			"key": "userAddress",
+			"value": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+			"type": "string",
+			"description": "Default hardhat account address"
+		}
+	],
+	"item": [
+		{
+			"name": "📊 Market Management",
+			"item": [
+				{
+					"name": "Get All Markets",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/markets",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "markets"]
+						}
+					}
+				},
+				{
+					"name": "Get Market Details",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/markets/{{marketAddress}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "markets", "{{marketAddress}}"]
+						}
+					}
+				},
+				{
+					"name": "Create Market",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"question\": \"Will the frontend demo work perfectly?\",\n  \"endTime\": \"2025-10-20T12:00:00.000Z\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/markets",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "markets"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "🎯 Market Operations",
+			"item": [
+				{
+					"name": "Get Pool State",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/markets/{{marketAddress}}/pool",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "markets", "{{marketAddress}}", "pool"]
+						}
+					}
+				},
+				{
+					"name": "Place YES Bet",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"outcome\": \"YES\",\n  \"usdcAmount\": \"5\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/markets/{{marketAddress}}/bet",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "markets", "{{marketAddress}}", "bet"]
+						}
+					}
+				},
+				{
+					"name": "Place NO Bet",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"outcome\": \"NO\",\n  \"usdcAmount\": \"3\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/markets/{{marketAddress}}/bet",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "markets", "{{marketAddress}}", "bet"]
+						}
+					}
+				},
+				{
+					"name": "Add YES Liquidity",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"outcome\": \"YES\",\n  \"usdcAmount\": \"10\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/markets/{{marketAddress}}/add-liquidity",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "markets", "{{marketAddress}}", "add-liquidity"]
+						}
+					}
+				},
+				{
+					"name": "Add NO Liquidity",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"outcome\": \"NO\",\n  \"usdcAmount\": \"10\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/markets/{{marketAddress}}/add-liquidity",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "markets", "{{marketAddress}}", "add-liquidity"]
+						}
+					}
+				},
+				{
+					"name": "Remove Liquidity",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"outcome\": \"YES\",\n  \"poolTokenAmount\": \"5000000000000000000\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/markets/{{marketAddress}}/remove-liquidity",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "markets", "{{marketAddress}}", "remove-liquidity"]
+						}
+					}
+				},
+				{
+					"name": "Sell Shares",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"outcome\": \"YES\",\n  \"shareAmount\": \"2.5\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/markets/{{marketAddress}}/sell-shares",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "markets", "{{marketAddress}}", "sell-shares"]
+						}
+					}
+				},
+				{
+					"name": "Get Resolution Info",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/markets/{{marketAddress}}/resolution",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "markets", "{{marketAddress}}", "resolution"]
+						}
+					}
+				},
+				{
+					"name": "Resolve Market (YES Wins)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"finalWeights\": [\"1\", \"0\"]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/markets/{{marketAddress}}/resolve",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "markets", "{{marketAddress}}", "resolve"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "👤 Position Tracking",
+			"item": [
+				{
+					"name": "My Complete Portfolio",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/positions/my-portfolio",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "positions", "my-portfolio"]
+						}
+					}
+				},
+				{
+					"name": "User Portfolio",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/positions/portfolio/{{userAddress}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "positions", "portfolio", "{{userAddress}}"]
+						}
+					}
+				},
+				{
+					"name": "My Market Position",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/positions/{{marketAddress}}/my-position",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "positions", "{{marketAddress}}", "my-position"]
+						}
+					}
+				},
+				{
+					"name": "Portfolio Summary",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/positions/{{marketAddress}}/portfolio-summary",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "positions", "{{marketAddress}}", "portfolio-summary"]
+						}
+					}
+				},
+				{
+					"name": "User Market Position",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/positions/{{marketAddress}}/{{userAddress}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "positions", "{{marketAddress}}", "{{userAddress}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "⚙️ Setup & Configuration",
+			"item": [
+				{
+					"name": "Get Wallet Balance",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/setup/balance",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "setup", "balance"]
+						}
+					}
+				},
+				{
+					"name": "Mint Test USDC",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/setup/mint",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "setup", "mint"]
+						}
+					}
+				},
+				{
+					"name": "Approve Token Spending",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"token\": \"0x6890c9b14cE89fe6c8141b151B496CE9C8B94eDe\",\n  \"spender\": \"0x429D4a39cBE21ebf5b2BD3FB651305d22BCDA74D\",\n  \"amount\": \"1000000000000000000000\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/setup",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "setup"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "🔧 Debug & Testing",
+			"item": [
+				{
+					"name": "Debug Factory",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/debug/factory",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "debug", "factory"]
+						}
+					}
+				},
+				{
+					"name": "Debug USDC Contract",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/debug/usdc",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "debug", "usdc"]
+						}
+					}
+				},
+				{
+					"name": "Debug Market Contract",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/debug/market/{{marketAddress}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "debug", "market", "{{marketAddress}}"]
+						}
+					}
+				},
+				{
+					"name": "Debug Balance",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/debug/balance",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "debug", "balance"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "📝 Events & Logs",
+			"item": [
+				{
+					"name": "Get Market Events",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/events/market/{{marketAddress}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "events", "market", "{{marketAddress}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "🏭 Factory Operations",
+			"item": [
+				{
+					"name": "Initialize Factory",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/factory/initialize",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "factory", "initialize"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "❤️ Health Check",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/health",
+							"host": ["{{baseUrl}}"],
+							"path": ["health"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "🚀 Demo Workflow",
+			"description": "Complete demo workflow - run requests in order",
+			"item": [
+				{
+					"name": "1. Check Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/health",
+							"host": ["{{baseUrl}}"],
+							"path": ["health"]
+						}
+					}
+				},
+				{
+					"name": "2. Check Balance",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/setup/balance",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "setup", "balance"]
+						}
+					}
+				},
+				{
+					"name": "3. Create Demo Market",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"question\": \"Will this Postman collection work perfectly?\",\n  \"endTime\": \"2025-10-20T12:00:00.000Z\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/markets",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "markets"]
+						}
+					}
+				},
+				{
+					"name": "4. Add YES Liquidity",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"outcome\": \"YES\",\n  \"usdcAmount\": \"10\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/markets/{{marketAddress}}/add-liquidity",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "markets", "{{marketAddress}}", "add-liquidity"]
+						}
+					}
+				},
+				{
+					"name": "5. Add NO Liquidity",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"outcome\": \"NO\",\n  \"usdcAmount\": \"10\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/markets/{{marketAddress}}/add-liquidity",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "markets", "{{marketAddress}}", "add-liquidity"]
+						}
+					}
+				},
+				{
+					"name": "6. Place YES Bet",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"outcome\": \"YES\",\n  \"usdcAmount\": \"5\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/markets/{{marketAddress}}/bet",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "markets", "{{marketAddress}}", "bet"]
+						}
+					}
+				},
+				{
+					"name": "7. Place NO Bet",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"outcome\": \"NO\",\n  \"usdcAmount\": \"3\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/markets/{{marketAddress}}/bet",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "markets", "{{marketAddress}}", "bet"]
+						}
+					}
+				},
+				{
+					"name": "8. Check My Position",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/positions/{{marketAddress}}/my-position",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "positions", "{{marketAddress}}", "my-position"]
+						}
+					}
+				},
+				{
+					"name": "9. Check Pool State",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/markets/{{marketAddress}}/pool",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "markets", "{{marketAddress}}", "pool"]
+						}
+					}
+				},
+				{
+					"name": "10. Check Portfolio",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/positions/my-portfolio",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "positions", "my-portfolio"]
+						}
+					}
+				}
+			]
+		}
+	]
+}

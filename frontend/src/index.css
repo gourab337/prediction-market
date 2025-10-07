@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+:root {
+  /* Dark background system */
+  --background: 0 0% 4%;
+  --foreground: 0 0% 95%;
+  
+  /* Gold accent system */
+  --primary: 45 100% 60%; /* Gold */
+  --primary-foreground: 0 0% 4%;
+  
+  /* Glass card system */
+  --card: 0 0% 8%;
+  --card-foreground: 0 0% 95%;
+  
+  /* Secondary UI elements */
+  --secondary: 0 0% 12%;
+  --secondary-foreground: 0 0% 85%;
+  
+  /* Muted elements - reddish-pink */
+  --muted: 345 20% 15%;
+  --muted-foreground: 345 15% 70%;
+  
+  /* Accent elements */
+  --accent: 0 0% 10%;
+  --accent-foreground: 45 100% 60%;
+  
+  /* Interactive elements */
+  --popover: 0 0% 6%;
+  --popover-foreground: 0 0% 95%;
+  
+  /* Success/Loss colors */
+  --success: 142 76% 36%; /* Green for profits */
+  --success-foreground: 0 0% 98%;
+  --destructive: 0 84% 60%; /* Red for losses */
+  --destructive-foreground: 0 0% 98%;
+  
+  /* Borders and inputs */
+  --border: 0 0% 15%;
+  --input: 0 0% 12%;
+  --ring: 45 100% 60%;
+  --radius: 0.75rem;
+}
+
+body {
+  background-color: hsl(0 0% 4%);
+  color: hsl(0 0% 95%);
+}
+
+/* Custom utility classes */
+.text-gold {
+  color: hsl(45 100% 60%);
+}
+
+.text-pink-300 {
+  color: hsl(345 70% 75%);
+}
+
+.bg-pink-500\/20 {
+  background-color: hsl(345 84% 60% / 0.2);
+}
+
+.border-pink-500\/30 {
+  border-color: hsl(345 84% 60% / 0.3);
+}

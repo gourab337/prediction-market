@@ -1,0 +1,10 @@
+
+// Auto-generated on 2025-10-06T03:36:50.698Z
+export const CONTRACT_ADDRESSES = {
+  "USDC": "0xDdF1A635D33a0251AAd0d1Fa72e5D3007Bb598F4",
+  "AdminResolver": "0x365b84d8eD439A3CF82d98290846Dd38088a64fa",
+  "ResolutionModule": "0x65EBE57630fDbe7372F61ce31224a082F5D427cb",
+  "MarketImplementation": "0xed636AdCAd92732f9993fbee82D558E7bEec6f61",
+  "AMMPoolTemplate": "0x67325B51350bCdFbBcA5eeAbcF10b92Ec46D3134",
+  "MarketFactory": "0xEcAf283e7fd8aBf33d79834924782ce02066E1DB"
+} as const;
