@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { TrendingUp, TrendingDown, X, DollarSign, Loader2, CheckCircle } from 'lucide-react';
+import { ethers } from 'ethers';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useMetaMaskWallet } from '@/hooks/useMetaMaskWallet';
 import { useMarketPool } from '@/hooks/api';
-import { marketApi } from '@/api/client';
-import type { Market, PlaceBetRequest } from '@/types/api';
+import { userTransactionApi } from '@/api/client';
+import type { Market, PrepareBetResponse, PreparedTransaction } from '@/types/api';
 
 interface PlaceBetModalProps {
   isOpen: boolean;
@@ -16,12 +17,14 @@ interface PlaceBetModalProps {
 }
 
 export function PlaceBetModal({ isOpen, onClose, market, selectedOutcome }: PlaceBetModalProps) {
-  const { isConnected } = useMetaMaskWallet();
+  const { isConnected, address: userAddress } = useMetaMaskWallet();
   const { data: poolData, isLoading: poolLoading } = useMarketPool(market.address);
   const [usdcAmount, setUsdcAmount] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [preparedTransactions, setPreparedTransactions] = useState<PreparedTransaction[]>([]);
+  const [currentTxIndex, setCurrentTxIndex] = useState(0);
 
   // Get prices from pool data
   const yesPrice = poolData ? parseFloat(poolData.yesPool.price) : 0;
@@ -44,7 +47,7 @@ export function PlaceBetModal({ isOpen, onClose, market, selectedOutcome }: Plac
       return;
     }
 
-    if (!isConnected) {
+    if (!isConnected || !userAddress) {
       setError('Please connect your wallet first');
       return;
     }
@@ -53,23 +56,66 @@ export function PlaceBetModal({ isOpen, onClose, market, selectedOutcome }: Plac
     setError(null);
 
     try {
-      const betRequest: PlaceBetRequest = {
+      // Prepare transaction data from backend
+      const response: PrepareBetResponse = await userTransactionApi.prepareBet(
+        market.address,
+        userAddress,
         outcome,
-        usdcAmount: usdcAmount
-      };
+        usdcAmount
+      );
 
-      await marketApi.placeBet(market.address, betRequest);
+      setPreparedTransactions(response.transactions);
+      setCurrentTxIndex(0);
+
+      // Create signer
+      const ethereum = window.ethereum;
+      if (!ethereum) {
+        throw new Error('MetaMask not found');
+      }
+
+      const provider = new ethers.BrowserProvider(ethereum as ethers.Eip1193Provider);
+      const signer = await provider.getSigner();
+
+      // Execute transactions sequentially
+      for (let i = 0; i < response.transactions.length; i++) {
+        const tx = response.transactions[i];
+        setCurrentTxIndex(i);
+
+        console.log(`Sending ${tx.type} transaction to ${tx.to}...`);
+
+        // Send transaction
+        const txResponse = await signer.sendTransaction({
+          to: tx.to,
+          data: tx.data,
+          value: tx.value,
+        });
+
+        console.log(`${tx.type} transaction sent:`, txResponse.hash);
+
+        // Wait for confirmation
+        const receipt = await txResponse.wait();
+        if (receipt) {
+          console.log(`${tx.type} transaction confirmed:`, receipt.hash);
+        } else {
+          console.log(`${tx.type} transaction sent but receipt not available`);
+        }
+      }
+
       setSuccess(true);
-      
+
       // Close modal after short delay to show success
       setTimeout(() => {
         onClose();
         setSuccess(false);
         setUsdcAmount('');
         setError(null);
+        setPreparedTransactions([]);
+        setCurrentTxIndex(0);
       }, 2000);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to place bet');
+      setPreparedTransactions([]);
+      setCurrentTxIndex(0);
     } finally {
       setIsLoading(false);
     }
@@ -205,7 +251,10 @@ export function PlaceBetModal({ isOpen, onClose, market, selectedOutcome }: Plac
               {isLoading ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Approving...
+                  {preparedTransactions.length > 0 
+                    ? `Processing ${preparedTransactions[currentTxIndex]?.type || 'transaction'}...`
+                    : 'Preparing Transaction...'
+                  }
                 </>
               ) : (
                 'Approve Transaction'

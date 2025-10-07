@@ -131,11 +131,16 @@ async function getPositionForUser(marketAddress: string, userAddress: string) {
 // GET /api/positions/my-portfolio (user's complete portfolio)
 router.get('/my-portfolio', async (req, res, next) => {
   try {
-    if (!wallet) {
-      throw new HttpError(400, 'Wallet not configured');
+    // Get user address from query parameter (required for multi-user support)
+    const { userAddress } = req.query;
+    
+    if (!userAddress || typeof userAddress !== 'string') {
+      throw new HttpError(400, 'userAddress query parameter is required');
     }
 
-    const userAddress = await wallet.getAddress();
+    if (!ethers.isAddress(userAddress)) {
+      throw new HttpError(400, 'Invalid user address');
+    }
     
     // Get all markets and aggregate positions across them
     try {
@@ -150,7 +155,7 @@ router.get('/my-portfolio', async (req, res, next) => {
       // Check positions in each market
       for (const market of allMarkets) {
         try {
-          const positionData = await getPositionForUser(market.address, userAddress);
+          const positionData = await getPositionForUser(market.address, userAddress as string);
           const marketValue = parseFloat(positionData.positions.total.currentValue);
           
           // Only include markets where user has positions (value > 0)
@@ -237,15 +242,19 @@ router.get('/portfolio/:userAddress', async (req, res, next) => {
 // GET /api/positions/:marketAddress/my-position (MUST come before /:userAddress)
 router.get('/:marketAddress/my-position', validateMarketAddressParam, async (req, res, next) => {
   try {
-    if (!wallet) {
-      throw new HttpError(400, 'Wallet not configured');
+    const { marketAddress } = req.params;
+    const { userAddress } = req.query;
+    
+    if (!userAddress || typeof userAddress !== 'string') {
+      throw new HttpError(400, 'userAddress query parameter is required');
     }
 
-    const { marketAddress } = req.params;
-    const userAddress = await wallet.getAddress();
+    if (!ethers.isAddress(userAddress)) {
+      throw new HttpError(400, 'Invalid user address');
+    }
 
     // Call the helper function
-    const positionResponse = await getPositionForUser(marketAddress, userAddress);
+    const positionResponse = await getPositionForUser(marketAddress, userAddress as string);
     res.json(positionResponse);
 
   } catch (error) {
@@ -256,12 +265,16 @@ router.get('/:marketAddress/my-position', validateMarketAddressParam, async (req
 // GET /api/positions/:marketAddress/portfolio-summary
 router.get('/:marketAddress/portfolio-summary', validateMarketAddressParam, async (req, res, next) => {
   try {
-    if (!wallet) {
-      throw new HttpError(400, 'Wallet not configured');
+    const { marketAddress } = req.params;
+    const { userAddress } = req.query;
+    
+    if (!userAddress || typeof userAddress !== 'string') {
+      throw new HttpError(400, 'userAddress query parameter is required');
     }
 
-    const { marketAddress } = req.params;
-    const userAddress = await wallet.getAddress();
+    if (!ethers.isAddress(userAddress)) {
+      throw new HttpError(400, 'Invalid user address');
+    }
 
     const market = new ethers.Contract(marketAddress, MARKET_ABI, provider);
     

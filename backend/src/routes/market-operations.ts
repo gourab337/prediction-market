@@ -163,24 +163,10 @@ router.get('/:address/pool', validateAddressParam, async (req, res, next) => {
 // POST /api/markets/:address/bet
 router.post('/:address/bet', validateAddressParam, async (req, res, next) => {
   try {
-    const { address } = req.params;
-    const params = req.body as BetRequest;
-    
-    // Validate request body
-    if (!params.outcome || !params.usdcAmount) {
-      throw new HttpError(400, 'Missing required parameters: outcome, usdcAmount');
-    }
-
-    if (params.outcome !== 'YES' && params.outcome !== 'NO') {
-      throw new HttpError(400, 'outcome must be "YES" or "NO"');
-    }
-
-    const result = await marketService.bet(
-      address,
-      params.outcome,
-      params.usdcAmount
-    );
-    res.json(result);
+    res.status(410).json({
+      error: 'This endpoint has been deprecated. Use /api/user-transactions/:address/prepare-bet to prepare transactions for frontend signing.',
+      migration: 'Frontend should now handle betting transactions with user wallet'
+    });
   } catch (error) {
     next(error);
   }
@@ -189,24 +175,10 @@ router.post('/:address/bet', validateAddressParam, async (req, res, next) => {
 // POST /api/markets/:address/sell-shares
 router.post('/:address/sell-shares', validateAddressParam, async (req, res, next) => {
   try {
-    const { address } = req.params;
-    const params = req.body as SellSharesRequest;
-    
-    // Validate request body
-    if (!params.outcome || !params.shareAmount) {
-      throw new HttpError(400, 'Missing required parameters: outcome, shareAmount');
-    }
-
-    if (params.outcome !== 'YES' && params.outcome !== 'NO') {
-      throw new HttpError(400, 'outcome must be "YES" or "NO"');
-    }
-
-    const result = await marketService.sellShares(
-      address,
-      params.outcome,
-      params.shareAmount
-    );
-    res.json(result);
+    res.status(410).json({
+      error: 'This endpoint has been deprecated. Use /api/user-transactions/:address/prepare-sell-shares to prepare transactions for frontend signing.',
+      migration: 'Frontend should now handle sell shares transactions with user wallet'
+    });
   } catch (error) {
     next(error);
   }
@@ -215,23 +187,10 @@ router.post('/:address/sell-shares', validateAddressParam, async (req, res, next
 // POST /api/markets/:address/add-liquidity
 router.post('/:address/add-liquidity', validateAddressParam, async (req, res, next) => {
   try {
-    const { address } = req.params;
-    const params = req.body as LiquidityRequest;
-
-    if (!params.outcome || !params.usdcAmount) {
-      throw new HttpError(400, 'Missing required parameters: outcome, usdcAmount');
-    }
-
-    if (params.outcome !== 'YES' && params.outcome !== 'NO') {
-      throw new HttpError(400, 'outcome must be "YES" or "NO"');
-    }
-
-    const result = await marketService.addLiquidity(
-      address,
-      params.outcome,
-      params.usdcAmount
-    );
-    res.json(result);
+    res.status(410).json({
+      error: 'This endpoint has been deprecated. Use /api/user-transactions/:address/prepare-add-liquidity to prepare transactions for frontend signing.',
+      migration: 'Frontend should now handle add liquidity transactions with user wallet'
+    });
   } catch (error) {
     next(error);
   }
@@ -240,23 +199,10 @@ router.post('/:address/add-liquidity', validateAddressParam, async (req, res, ne
 // POST /api/markets/:address/remove-liquidity
 router.post('/:address/remove-liquidity', validateAddressParam, async (req, res, next) => {
   try {
-    const { address } = req.params;
-    const params = req.body as RemoveLiquidityRequest;
-
-    if (!params.outcome || !params.poolTokenAmount) {
-      throw new HttpError(400, 'Missing required parameters: outcome, poolTokenAmount');
-    }
-
-    if (params.outcome !== 'YES' && params.outcome !== 'NO') {
-      throw new HttpError(400, 'outcome must be "YES" or "NO"');
-    }
-
-    const result = await marketService.removeLiquidity(
-      address,
-      params.outcome,
-      params.poolTokenAmount
-    );
-    res.json(result);
+    res.status(410).json({
+      error: 'This endpoint has been deprecated. Use /api/user-transactions/:address/prepare-remove-liquidity to prepare transactions for frontend signing.',
+      migration: 'Frontend should now handle remove liquidity transactions with user wallet'
+    });
   } catch (error) {
     next(error);
   }

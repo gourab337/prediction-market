@@ -1,10 +1,10 @@
-import { AlertCircle, Clock, Wallet, RefreshCw, Activity } from 'lucide-react';
+import { AlertCircle, Clock, Wallet, RefreshCw, Activity, Coins } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useMetaMaskWallet } from '@/hooks/useMetaMaskWallet';
 import type { PortfolioMarket } from '@/types/api';
-import { useMyPortfolio, useBalance } from '@/hooks/api';
+import { useMyPortfolio, useBalance, useMintUSDC } from '@/hooks/api';
 import { SellSharesModal } from './SellSharesModal';
 
 export function PortfolioPage() {
@@ -17,6 +17,7 @@ export function PortfolioPage() {
   // Fetch portfolio data from API
   const { data: portfolio, isLoading, error } = useMyPortfolio();
   const { data: balance } = useBalance();
+  const mintUSDC = useMintUSDC();
 
   const handleRefresh = () => {
     window.location.reload();
@@ -120,7 +121,21 @@ export function PortfolioPage() {
                   </div>
                   <div className="text-sm text-pink-300">USDC Balance</div>
                 </div>
-                <Wallet className="w-8 h-8 text-pink-400" />
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={() => mintUSDC.mutate()}
+                    disabled={mintUSDC.isPending || !isConnected}
+                    size="sm"
+                    className="backdrop-blur-sm bg-pink-500/20 hover:bg-pink-500/30 border border-pink-500/30 text-pink-300 hover:text-pink-200 cursor-pointer"
+                  >
+                    {mintUSDC.isPending ? (
+                      <RefreshCw className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Coins className="h-4 w-4" />
+                    )}
+                  </Button>
+                  <Wallet className="w-8 h-8 text-pink-400" />
+                </div>
               </div>
             </CardContent>
           </Card>

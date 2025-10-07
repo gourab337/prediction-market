@@ -68,7 +68,7 @@ export function useMarketPool(address: string) {
 
 // Position Hooks
 export function useMyPortfolio() {
-  const { isConnected } = useWalletStore();
+  const { isConnected, address } = useWalletStore();
   const setPortfolio = usePortfolioStore((state) => state.setPortfolio);
   const setLoading = usePortfolioStore((state) => state.setLoading);
   const setError = usePortfolioStore((state) => state.setError);
@@ -76,9 +76,12 @@ export function useMyPortfolio() {
   return useQuery({
     queryKey: queryKeys.myPortfolio,
     queryFn: async () => {
+      if (!address) {
+        throw new Error('Wallet not connected');
+      }
       setLoading(true);
       try {
-        const portfolio = await positionApi.getMyPortfolio();
+        const portfolio = await positionApi.getMyPortfolio(address);
         setPortfolio(portfolio);
         setError(null);
         return portfolio;
@@ -90,24 +93,27 @@ export function useMyPortfolio() {
         setLoading(false);
       }
     },
-    enabled: isConnected,
+    enabled: isConnected && !!address,
     staleTime: 30000,
     refetchInterval: 60000,
   });
 }
 
 export function useMyPosition(marketAddress: string) {
-  const { isConnected } = useWalletStore();
+  const { isConnected, address } = useWalletStore();
   const setPosition = usePortfolioStore((state) => state.setPosition);
 
   return useQuery({
     queryKey: queryKeys.myPosition(marketAddress),
     queryFn: async () => {
-      const position = await positionApi.getMyPosition(marketAddress);
+      if (!address) {
+        throw new Error('Wallet not connected');
+      }
+      const position = await positionApi.getMyPosition(marketAddress, address);
       setPosition(marketAddress, position);
       return position;
     },
-    enabled: isConnected && !!marketAddress,
+    enabled: isConnected && !!marketAddress && !!address,
     staleTime: 30000,
     refetchInterval: 60000,
   });
@@ -115,17 +121,20 @@ export function useMyPosition(marketAddress: string) {
 
 // Wallet Hooks
 export function useBalance() {
-  const { isConnected } = useWalletStore();
+  const { isConnected, address } = useWalletStore();
   const setBalance = useWalletStore((state) => state.setBalance);
 
   return useQuery({
     queryKey: queryKeys.balance,
     queryFn: async () => {
-      const balance = await setupApi.getBalance();
+      if (!address) {
+        throw new Error('Wallet not connected');
+      }
+      const balance = await setupApi.getBalance(address);
       setBalance(balance);
       return balance;
     },
-    enabled: isConnected,
+    enabled: isConnected && !!address,
     staleTime: 30000,
     refetchInterval: 60000,
   });
@@ -218,17 +227,23 @@ export function useSellShares(marketAddress: string) {
 }
 
 export function useMintUSDC() {
+  const { address } = useWalletStore();
   const queryClient = useQueryClient();
   const addNotification = useUIStore((state) => state.addNotification);
 
   return useMutation({
-    mutationFn: () => setupApi.mintUSDC(),
+    mutationFn: () => {
+      if (!address) {
+        throw new Error('Wallet not connected');
+      }
+      return setupApi.mintUSDC(address);
+    },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.balance });
       addNotification({
         type: 'success',
         title: 'USDC Minted',
-        message: `Successfully minted test USDC. New balance: ${data.balance}`,
+        message: `Successfully minted ${data.amount} USDC to ${data.mintedTo}. New balance: ${data.balance}`,
       });
     },
     onError: (error) => {

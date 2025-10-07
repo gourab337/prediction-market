@@ -16,6 +16,7 @@ import resolutionTestRoutes from './routes/resolution-test';
 import resolutionFinalizeRoutes from './routes/resolution-finalize';
 import disputeResolutionRoutes from './routes/dispute-resolution';
 import positionRoutes from './routes/positions';
+import userTransactionRoutes from './routes/user-transactions';
 
 const app = express();
 
@@ -34,6 +35,7 @@ app.use('/api/resolution-test', resolutionTestRoutes);
 app.use('/api/resolution', resolutionFinalizeRoutes);
 app.use('/api/dispute', disputeResolutionRoutes);
 app.use('/api/positions', positionRoutes);
+app.use('/api/user-transactions', userTransactionRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

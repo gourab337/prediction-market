@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { ethers } from 'ethers';
 import { ERC20_ABI } from '../abis';
-import { provider, wallet } from '../config';
+import { provider, wallet, BLOCKCHAIN_CONFIG } from '../config';
 import { validateAddress, HttpError } from '../middleware';
 
 const router = Router();
@@ -19,22 +19,34 @@ router.post('/mint', async (req, res, next) => {
       throw new Error('Wallet not configured');
     }
 
+    const { userAddress } = req.body;
+    
+    // Validate userAddress if provided
+    if (userAddress && !ethers.isAddress(userAddress)) {
+      throw new HttpError(400, 'Invalid user address');
+    }
+
     const usdcContract = new ethers.Contract(
-      '0x17dded11695B2F3cD4d821789785462274764e24',
+      BLOCKCHAIN_CONFIG.usdcAddress,
       [...ERC20_ABI, 'function mint(address to, uint256 amount)'],
       wallet
     );
 
-    // Mint 1000 USDC (with 18 decimals)
-    const mintAmount = ethers.parseUnits('1000', 18);
-    const tx = await usdcContract.mint(await wallet.getAddress(), mintAmount);
+    // Mint to specified address or dev wallet
+    const mintToAddress = userAddress || await wallet.getAddress();
+    
+    // Mint 1000 USDC (with 6 decimals)
+    const mintAmount = ethers.parseUnits('1000', 6);
+    const tx = await usdcContract.mint(mintToAddress, mintAmount);
     await tx.wait();
 
-    const balance = await usdcContract.balanceOf(await wallet.getAddress());
+    const balance = await usdcContract.balanceOf(mintToAddress);
 
     res.json({
       success: true,
-      balance: balance.toString()
+      balance: balance.toString(),
+      mintedTo: mintToAddress,
+      amount: ethers.formatUnits(mintAmount, 18)
     });
   } catch (error) {
     next(error);
@@ -86,18 +98,30 @@ router.post('/', async (req, res, next) => {
 // GET /api/setup/balance - Check ETH and token balances
 router.get('/balance', async (req, res, next) => {
   try {
-    if (!wallet) {
-      throw new Error('Wallet not configured');
+    const { userAddress } = req.query;
+    
+    // Validate userAddress if provided
+    if (userAddress && typeof userAddress !== 'string') {
+      throw new HttpError(400, 'userAddress must be a string');
+    }
+    
+    if (userAddress && !ethers.isAddress(userAddress)) {
+      throw new HttpError(400, 'Invalid user address');
     }
 
-    const address = await wallet.getAddress();
+    // Use provided address or dev wallet
+    const address = userAddress || (wallet ? await wallet.getAddress() : null);
+    
+    if (!address) {
+      throw new HttpError(400, 'No address available - wallet not configured and no userAddress provided');
+    }
     
     // Get ETH balance
     const ethBalance = await provider.getBalance(address);
     
     // Get USDC balance
     const usdcContract = new ethers.Contract(
-      '0x6890c9b14cE89fe6c8141b151B496CE9C8B94eDe',
+      BLOCKCHAIN_CONFIG.usdcAddress,
       ERC20_ABI,
       provider
     );

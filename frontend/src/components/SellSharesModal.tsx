@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { TrendingUp, TrendingDown, X, Loader2, CheckCircle } from 'lucide-react';
+import { ethers } from 'ethers';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useMetaMaskWallet } from '@/hooks/useMetaMaskWallet';
-import { marketApi } from '@/api/client';
-import type { PortfolioMarket } from '@/types/api';
+import { userTransactionApi } from '@/api/client';
+import type { PortfolioMarket, PreparedTransaction } from '@/types/api';
 
 interface SellSharesModalProps {
   isOpen: boolean;
@@ -16,11 +17,13 @@ interface SellSharesModalProps {
 }
 
 export function SellSharesModal({ isOpen, onClose, market, outcome, maxShares }: SellSharesModalProps) {
-  const { isConnected } = useMetaMaskWallet();
+  const { isConnected, address: userAddress } = useMetaMaskWallet();
   const [shareAmount, setShareAmount] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [preparedTransactions, setPreparedTransactions] = useState<PreparedTransaction[]>([]);
+  const [currentTxIndex, setCurrentTxIndex] = useState(0);
 
   const currentPrice = outcome === 'YES'
     ? market.positions.yesShares.currentPrice
@@ -42,26 +45,71 @@ export function SellSharesModal({ isOpen, onClose, market, outcome, maxShares }:
       setError('You cannot sell more shares than you own');
       return;
     }
-    if (!isConnected) {
+    if (!isConnected || !userAddress) {
       setError('Please connect your wallet first');
       return;
     }
     setIsLoading(true);
     setError(null);
     try {
-      await marketApi.sellShares(market.address, {
+      // Prepare transaction data from backend
+      const response = await userTransactionApi.prepareSellShares(
+        market.address,
+        userAddress,
         outcome,
-        shareAmount: shareAmount
-      });
+        shareAmount
+      );
+
+      setPreparedTransactions(response.transactions);
+      setCurrentTxIndex(0);
+
+      // Create signer
+      const ethereum = window.ethereum;
+      if (!ethereum) {
+        throw new Error('MetaMask not found');
+      }
+
+      const provider = new ethers.BrowserProvider(ethereum as ethers.Eip1193Provider);
+      const signer = await provider.getSigner();
+
+      // Execute transactions sequentially
+      for (let i = 0; i < response.transactions.length; i++) {
+        const tx = response.transactions[i];
+        setCurrentTxIndex(i);
+
+        console.log(`Sending ${tx.type} transaction to ${tx.to}...`);
+
+        // Send transaction
+        const txResponse = await signer.sendTransaction({
+          to: tx.to,
+          data: tx.data,
+          value: tx.value,
+        });
+
+        console.log(`${tx.type} transaction sent:`, txResponse.hash);
+
+        // Wait for confirmation
+        const receipt = await txResponse.wait();
+        if (receipt) {
+          console.log(`${tx.type} transaction confirmed:`, receipt.hash);
+        } else {
+          console.log(`${tx.type} transaction sent but receipt not available`);
+        }
+      }
+
       setSuccess(true);
       setTimeout(() => {
         onClose();
         setSuccess(false);
         setShareAmount('');
         setError(null);
+        setPreparedTransactions([]);
+        setCurrentTxIndex(0);
       }, 2000);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to sell shares');
+      setPreparedTransactions([]);
+      setCurrentTxIndex(0);
     } finally {
       setIsLoading(false);
     }
@@ -71,6 +119,8 @@ export function SellSharesModal({ isOpen, onClose, market, outcome, maxShares }:
     setShareAmount('');
     setError(null);
     setSuccess(false);
+    setPreparedTransactions([]);
+    setCurrentTxIndex(0);
     onClose();
   };
 
@@ -184,7 +234,10 @@ export function SellSharesModal({ isOpen, onClose, market, outcome, maxShares }:
               {isLoading ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Approving...
+                  {preparedTransactions.length > 0 
+                    ? `Processing ${preparedTransactions[currentTxIndex]?.type || 'transaction'}...`
+                    : 'Preparing Transaction...'
+                  }
                 </>
               ) : (
                 'Approve Transaction'

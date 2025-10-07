@@ -188,3 +188,62 @@ export interface SellResponse extends TransactionResponse {
 export interface MarketsResponse {
   markets: Market[];
 }
+
+// User Transaction Types (for frontend wallet operations)
+export interface PreparedTransaction {
+  type: 'approval' | 'bet' | 'sell-shares' | 'add-liquidity' | 'remove-liquidity';
+  to: string;
+  data: string;
+  value: string;
+  description: string;
+}
+
+export interface PrepareBetResponse {
+  success: boolean;
+  marketAddress: string;
+  userAddress: string;
+  transactions: PreparedTransaction[];
+  summary: {
+    action: 'bet';
+    outcome: 'YES' | 'NO';
+    amount: string;
+    currency: 'USDC';
+    needsApproval: boolean;
+  };
+}
+
+export interface PrepareSellSharesResponse {
+  success: boolean;
+  marketAddress: string;
+  userAddress: string;
+  transactions: PreparedTransaction[];
+  summary: {
+    action: 'sell-shares';
+    outcome: 'YES' | 'NO';
+    amount: string;
+    currency: 'SHARES';
+  };
+}
+
+export interface PrepareLiquidityResponse {
+  success: boolean;
+  marketAddress: string;
+  userAddress: string;
+  transactions: PreparedTransaction[];
+  summary: {
+    action: 'add-liquidity' | 'remove-liquidity';
+    outcome: 'YES' | 'NO';
+    amount: string;
+    currency: 'USDC' | 'POOL_TOKENS';
+    needsApproval?: boolean;
+  };
+}
+
+export interface AllowanceCheckResponse {
+  userAddress: string;
+  spender: string;
+  requiredAmount: string;
+  currentAllowance: string;
+  hasEnoughAllowance: boolean;
+  needsApproval: boolean;
+}

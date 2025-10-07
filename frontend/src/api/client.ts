@@ -20,7 +20,7 @@ import type {
   MarketsResponse,
 } from '@/types/api';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
 
 // Create axios instance with default config
 const api = axios.create({
@@ -106,8 +106,10 @@ export const marketApi = {
 // Position Tracking APIs
 export const positionApi = {
   // Get current user's portfolio
-  getMyPortfolio: async (): Promise<Portfolio> => {
-    const response = await api.get<Portfolio>('/api/positions/my-portfolio');
+  getMyPortfolio: async (userAddress: string): Promise<Portfolio> => {
+    const response = await api.get<Portfolio>('/api/positions/my-portfolio', {
+      params: { userAddress }
+    });
     return response.data;
   },
 
@@ -118,14 +120,18 @@ export const positionApi = {
   },
 
   // Get user's position in specific market
-  getMyPosition: async (marketAddress: string): Promise<UserPosition> => {
-    const response = await api.get<UserPosition>(`/api/positions/${marketAddress}/my-position`);
+  getMyPosition: async (marketAddress: string, userAddress: string): Promise<UserPosition> => {
+    const response = await api.get<UserPosition>(`/api/positions/${marketAddress}/my-position`, {
+      params: { userAddress }
+    });
     return response.data;
   },
 
   // Get portfolio summary for market
-  getPortfolioSummary: async (marketAddress: string): Promise<PortfolioSummary> => {
-    const response = await api.get<PortfolioSummary>(`/api/positions/${marketAddress}/portfolio-summary`);
+  getPortfolioSummary: async (marketAddress: string, userAddress: string): Promise<PortfolioSummary> => {
+    const response = await api.get<PortfolioSummary>(`/api/positions/${marketAddress}/portfolio-summary`, {
+      params: { userAddress }
+    });
     return response.data;
   },
 
@@ -145,14 +151,16 @@ export const setupApi = {
   },
 
   // Get wallet balances
-  getBalance: async (): Promise<WalletBalance> => {
-    const response = await api.get<WalletBalance>('/api/setup/balance');
+  getBalance: async (userAddress?: string): Promise<WalletBalance> => {
+    const params = userAddress ? { userAddress } : {};
+    const response = await api.get<WalletBalance>('/api/setup/balance', { params });
     return response.data;
   },
 
   // Mint test USDC
-  mintUSDC: async (): Promise<{ success: boolean; balance: string }> => {
-    const response = await api.post('/api/setup/mint');
+  mintUSDC: async (userAddress?: string): Promise<{ success: boolean; balance: string; mintedTo: string; amount: string }> => {
+    const data = userAddress ? { userAddress } : {};
+    const response = await api.post('/api/setup/mint', data);
     return response.data;
   },
 };
@@ -206,6 +214,57 @@ export const factoryApi = {
 export const healthApi = {
   check: async (): Promise<{ status: string }> => {
     const response = await api.get('/health');
+    return response.data;
+  },
+};
+
+// User Transaction APIs (for frontend wallet operations)
+export const userTransactionApi = {
+  // Prepare bet transaction data
+  prepareBet: async (marketAddress: string, userAddress: string, outcome: 'YES' | 'NO', usdcAmount: string) => {
+    const response = await api.post(`/api/user-transactions/${marketAddress}/prepare-bet`, {
+      userAddress,
+      outcome,
+      usdcAmount
+    });
+    return response.data;
+  },
+
+  // Prepare sell shares transaction data
+  prepareSellShares: async (marketAddress: string, userAddress: string, outcome: 'YES' | 'NO', shareAmount: string) => {
+    const response = await api.post(`/api/user-transactions/${marketAddress}/prepare-sell-shares`, {
+      userAddress,
+      outcome,
+      shareAmount
+    });
+    return response.data;
+  },
+
+  // Prepare add liquidity transaction data
+  prepareAddLiquidity: async (marketAddress: string, userAddress: string, outcome: 'YES' | 'NO', usdcAmount: string) => {
+    const response = await api.post(`/api/user-transactions/${marketAddress}/prepare-add-liquidity`, {
+      userAddress,
+      outcome,
+      usdcAmount
+    });
+    return response.data;
+  },
+
+  // Prepare remove liquidity transaction data
+  prepareRemoveLiquidity: async (marketAddress: string, userAddress: string, outcome: 'YES' | 'NO', poolTokenAmount: string) => {
+    const response = await api.post(`/api/user-transactions/${marketAddress}/prepare-remove-liquidity`, {
+      userAddress,
+      outcome,
+      poolTokenAmount
+    });
+    return response.data;
+  },
+
+  // Check USDC allowance
+  checkAllowance: async (marketAddress: string, userAddress: string, spender: string, amount: string) => {
+    const response = await api.get(`/api/user-transactions/${marketAddress}/check-allowance`, {
+      params: { userAddress, spender, amount }
+    });
     return response.data;
   },
 };

@@ -717,63 +717,7 @@ export class MarketService {
     transactionHash: string;
     betType: 'prediction-bet';
   }> {
-    return this.queueTransaction(async () => {
-      if (!wallet) {
-        throw new Error('Wallet not configured');
-      }
-
-      try {
-        const market = new ethers.Contract(
-          marketAddress,
-          MARKET_ABI,
-          this.nonceManager
-        );
-
-        // Approve USDC spending to market contract
-        const usdcAmountBN = ethers.parseUnits(usdcAmount, 6); // USDC has 6 decimals
-        
-        const allowance = await this.usdcContract.allowance(await this.nonceManager.getAddress(), marketAddress);
-        if (allowance < usdcAmountBN) {
-          console.log('Approving USDC spending for betting...');
-          const approveTx = await this.usdcContract.approve(marketAddress, usdcAmountBN);
-          if (approveTx && typeof approveTx === 'object' && 'wait' in approveTx) {
-            const approveReceipt = await (approveTx as any).wait();
-            console.log('USDC approval for betting confirmed:', approveReceipt.hash);
-          } else {
-            // Wait for state update
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            console.log('USDC approval for betting completed');
-          }
-        }
-
-        // Place bet using market contract's bet function
-        // bet(bool yes, uint256 amount) - true for YES, false for NO
-        console.log(`Placing ${outcome} bet...`);
-        const isYes = outcome === 'YES';
-        const tx = await market.bet(isYes, usdcAmountBN);
-        const receipt = await tx.wait();
-
-        // Get the amount of shares received from the transaction logs
-        const transferEvents = receipt.logs.filter((log: any) => 
-          log.topics[0] === ethers.id('Transfer(address,address,uint256)')
-        );
-        
-        let shareTokensReceived = '0';
-        if (transferEvents.length > 0) {
-          const transferEvent = transferEvents[transferEvents.length - 1];
-          shareTokensReceived = ethers.formatUnits(transferEvent.data, 18);
-        }
-
-        return {
-          shareTokensReceived,
-          transactionHash: tx.hash,
-          betType: 'prediction-bet'
-        };
-      } catch (error) {
-        console.error('Error placing bet:', error);
-        throw error;
-      }
-    });
+    throw new Error('Betting operations should be handled by frontend with user wallet. Use /api/user-transactions/:address/prepare-bet instead.');
   }
 
   async sellShares(
@@ -784,54 +728,7 @@ export class MarketService {
     usdcReceived: string;
     transactionHash: string;
   }> {
-    if (!wallet) {
-      throw new Error('Wallet not configured');
-    }
-
-    try {
-      // Get the market to find the pool addresses
-      const market = new ethers.Contract(
-        marketAddress,
-        MARKET_ABI,
-        wallet
-      );
-
-      const poolAddress = outcome === 'YES' 
-        ? await market.yesPool()
-        : await market.noPool();
-
-      const pool = new ethers.Contract(
-        poolAddress,
-        AMM_POOL_ABI,
-        wallet
-      );
-
-      // Remove liquidity from the pool (sell shares)
-      const shareAmountBN = ethers.parseUnits(shareAmount, 18);
-      
-      const tx = await pool.removeLiquidity(shareAmountBN);
-      const receipt = await tx.wait();
-
-      // Get USDC received from transaction logs
-      const transferEvents = receipt.logs.filter((log: any) => 
-        log.topics[0] === ethers.id('Transfer(address,address,uint256)') &&
-        log.address.toLowerCase() === BLOCKCHAIN_CONFIG.usdcAddress.toLowerCase()
-      );
-      
-      let usdcReceived = '0';
-      if (transferEvents.length > 0) {
-        const transferEvent = transferEvents[transferEvents.length - 1];
-        usdcReceived = ethers.formatUnits(transferEvent.data, 6);
-      }
-
-      return {
-        usdcReceived,
-        transactionHash: tx.hash
-      };
-    } catch (error) {
-      console.error('Error selling shares:', error);
-      throw error;
-    }
+    throw new Error('Sell shares operations should be handled by frontend with user wallet. Use /api/user-transactions/:address/prepare-sell-shares instead.');
   }
 
   async addLiquidity(
@@ -843,73 +740,7 @@ export class MarketService {
     transactionHash: string;
     operationType: 'liquidity-provision';
   }> {
-    return this.queueTransaction(async () => {
-      if (!wallet) {
-        throw new Error('Wallet not configured');
-      }
-
-      try {
-        // Get the market to find the pool addresses
-        const market = new ethers.Contract(
-          marketAddress,
-          MARKET_ABI,
-          this.nonceManager
-        );
-
-        const poolAddress = outcome === 'YES' 
-          ? await market.yesPool()
-          : await market.noPool();
-
-        const pool = new ethers.Contract(
-          poolAddress,
-          AMM_POOL_ABI,
-          this.nonceManager
-        );
-
-        // Approve USDC spending
-        const usdcAmountBN = ethers.parseUnits(usdcAmount, 6);
-        
-        const allowance = await this.usdcContract.allowance(await this.nonceManager.getAddress(), poolAddress);
-        if (allowance < usdcAmountBN) {
-          console.log('Approving USDC spending...');
-          const approveTx = await this.usdcContract.approve(poolAddress, usdcAmountBN);
-          // Wait for approval transaction to be mined
-          if (approveTx && typeof approveTx === 'object' && 'wait' in approveTx) {
-            const approveReceipt = await (approveTx as any).wait();
-            console.log('USDC approval confirmed:', approveReceipt.hash);
-          } else {
-            // Approval returned boolean, wait a bit for state update
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            console.log('USDC approval completed');
-          }
-        }
-
-        console.log('Adding liquidity...');
-        const tx = await pool.addLiquidity(usdcAmountBN);
-        const receipt = await tx.wait();
-
-        // Get pool tokens received from transaction logs
-        const transferEvents = receipt.logs.filter((log: any) => 
-          log.topics[0] === ethers.id('Transfer(address,address,uint256)') &&
-          log.address.toLowerCase() === poolAddress.toLowerCase()
-        );
-        
-        let poolTokensReceived = '0';
-        if (transferEvents.length > 0) {
-          const transferEvent = transferEvents[transferEvents.length - 1];
-          poolTokensReceived = ethers.formatUnits(transferEvent.data, 18);
-        }
-
-        return {
-          poolTokensReceived,
-          transactionHash: tx.hash,
-          operationType: 'liquidity-provision'
-        };
-      } catch (error) {
-        console.error('Error adding liquidity:', error);
-        throw error;
-      }
-    });
+    throw new Error('Add liquidity operations should be handled by frontend with user wallet. Use /api/user-transactions/:address/prepare-add-liquidity instead.');
   }
 
   async removeLiquidity(
@@ -920,52 +751,6 @@ export class MarketService {
     usdcReceived: string;
     transactionHash: string;
   }> {
-    if (!wallet) {
-      throw new Error('Wallet not configured');
-    }
-
-    try {
-      // Get the market to find the pool addresses
-      const market = new ethers.Contract(
-        marketAddress,
-        MARKET_ABI,
-        wallet
-      );
-
-      const poolAddress = outcome === 'YES' 
-        ? await market.yesPool()
-        : await market.noPool();
-
-      const pool = new ethers.Contract(
-        poolAddress,
-        AMM_POOL_ABI,
-        wallet
-      );
-
-      const poolTokenAmountBN = ethers.parseUnits(poolTokenAmount, 18);
-      
-      const tx = await pool.removeLiquidity(poolTokenAmountBN);
-      const receipt = await tx.wait();
-
-      // Get USDC received from transaction logs
-      const transferEvents = receipt.logs.filter((log: any) => 
-        log.topics[0] === ethers.id('Transfer(address,address,uint256)') &&
-        log.address.toLowerCase() === BLOCKCHAIN_CONFIG.usdcAddress.toLowerCase()
-      );
-      
-      let usdcReceived = '0';
-      if (transferEvents.length > 0) {
-        const transferEvent = transferEvents[transferEvents.length - 1];
-        usdcReceived = ethers.formatUnits(transferEvent.data, 6);
-      }
-
-      return {
-        usdcReceived,
-        transactionHash: tx.hash
-      };
-    } catch (error) {
-      console.error('Error removing liquidity:', error);
-      throw error;
-    }
+    throw new Error('Remove liquidity operations should be handled by frontend with user wallet. Use /api/user-transactions/:address/prepare-remove-liquidity instead.');
   }
 }

@@ -247,6 +247,9 @@ Propose or finalize market resolution.
 ### GET /api/positions/my-portfolio
 Get current user's complete portfolio.
 
+**Query Parameters:**
+- `userAddress` (string, required): User's wallet address
+
 **Response:**
 ```json
 {
@@ -278,6 +281,9 @@ Get current user's position in a specific market.
 
 **Parameters:**
 - `marketAddress` (string): Market contract address
+
+**Query Parameters:**
+- `userAddress` (string, required): User's wallet address
 
 **Response:**
 ```json
@@ -324,6 +330,9 @@ Get portfolio summary for a specific market.
 
 **Parameters:**
 - `marketAddress` (string): Market contract address
+
+**Query Parameters:**
+- `userAddress` (string, required): User's wallet address
 
 **Response:**
 ```json
